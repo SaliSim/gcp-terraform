@@ -42,11 +42,11 @@
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-name: 'Terraform'
+name: "Terraform"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
 permissions:
@@ -54,14 +54,13 @@ permissions:
 
 jobs:
   terraform-plan:
-    name: 'Terraform Plan'
+    name: "Terraform Plan"
     runs-on: ubuntu-latest
-    environment: staging #Environment for state isolation
+    environment: staging
 
     steps:
       - name: Checkout
-        uses:actions/checkout@v4
-
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -69,55 +68,48 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
-      run: terraform init
+        run: terraform init
 
       - name: Terraform Format
-      run: terraform fmt -check
+        run: terraform fmt -check
 
-      -name: Terraform Validate
-      run: terraform validate
+      - name: Terraform Validate
+        run: terraform validate
 
-      -name: Terraform plan
-      run: terraform plan -out=tfplan
-      env:
-        GOOGLE_CREDENTIALS:${{secrets.GCP_ACC_KEY}}
+      - name: Terraform plan
+        run: terraform plan -out=tfplan
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GCP_ACC_KEY }}
 
-      -name: Upload Plan Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: tfplan
-        path: tfplan
-
-
-
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
 
   terraform-apply:
-    name:"Terraform Apply"
+    name: "Terraform Apply"
     needs: terraform-plan
     runs-on: ubuntu-latest
     environment: production
-    if github.ref == "refs/heads/main" #only apply to main
-
+    if: github.ref == 'refs/heads/main'
 
     steps:
-      -name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      -name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      -name: Terraform Init
-      run: terraform init
+      - name: Terraform Init
+        run: terraform init
 
-      -name: Download Plan Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name:tfplan
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
 
-      -name: Terraform Apply
-      run: terraform apply -auto-approve tfplan
-      env:
-        GOOGLE_CREDENTIALS:${{secrets.GCP_ACC_KEY}}
-
-
-
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GCP_ACC_KEY }}
